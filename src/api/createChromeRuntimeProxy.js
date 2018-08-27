@@ -1,28 +1,34 @@
-import { createDownMessage, hydrate, isUpMessage } from '../utils/index'
-
+import {
+  createDownMessage,
+  hydrate,
+  isConnection,
+  isUpMessage
+} from '../utils/index'
 
 export const createChromeRuntimeProxy = store => {
   const state = {
-    tabIds: []
+    ports: []
   }
 
+  const onConnect = port => {
+    if (!isConnection(port)) return
 
-  const addTab = tabId => {
-    if (state.tabIds.includes(tabId)) return
+    port.onMessage.addListener(onMessage)
+    port.onDisconnect.addListener(port => {
+      state.ports.splice(state.ports.indexOf(port), 1)
+    })
 
     // Sure, mutate, why not
-    state.tabIds.push(tabId)
+    state.ports.push(port)
 
     // Send the new tab its initial state
     const message = createDownMessage(hydrate(store.getState()))
-    chrome.tabs.sendMessage(tabId, message)
+    port.postMessage(message)
 
     return proxy // for chaining
   }
 
-
   const getProxyState = () => state
-
 
   const onMessage = message => {
     if (!isUpMessage(message)) return
@@ -31,41 +37,23 @@ export const createChromeRuntimeProxy = store => {
     store.dispatch(message.action)
   }
 
-
-  const removeTab = tabId => {
-    const index = state.tabIds.indexOf(tabId)
-
-    if (index === -1) return
-
-    // Sure, mutate, why not
-    state.tabIds.splice(index, 1)
-
-    return proxy // for chaining
-  }
-
-
   // Set up downstream notification
   store.subscribe(newState => {
     const message = createDownMessage(hydrate(newState))
 
     // Notify downstream proxies of the new state
-    state.tabIds.forEach(tabId => {
-      chrome.tabs.sendMessage(tabId, message)
+    state.ports.forEach(port => {
+      port.postMessage(message)
     })
   })
 
-
   // Start listening to messages from tabs
-  chrome.runtime.onMessage.addListener(onMessage)
-
+  chrome.runtime.onConnect.addListener(onConnect)
 
   const proxy = {
     ...store,
-    addTab,
-    getProxyState,
-    removeTab
+    getProxyState
   }
-
 
   return proxy
 }

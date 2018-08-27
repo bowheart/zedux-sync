@@ -40,8 +40,10 @@ export const createIframeProxy = store => {
 
     const message = createUpMessage(action)
 
+    console.log('sending message to parent:', message, window)
+
     // Pass the action up to the parent window
-    window.parent.postMessage(message, '*') // TODO: origin permissions
+    window.postMessage(message, '*') // TODO: origin permissions
   }
 
 
@@ -52,7 +54,7 @@ export const createIframeProxy = store => {
     const message = createUpMessage(hydrateActor(newState))
 
     // Pass the action up to the parent window
-    window.parent.postMessage(message, '*') // TODO: origin permissions
+    window.postMessage(message, '*') // TODO: origin permissions
   }
 
 
@@ -60,7 +62,7 @@ export const createIframeProxy = store => {
     if (!isUpMessage(message)) return
 
     // Forward the action up to the parent window
-    window.parent.postMessage(message, '*') // TODO: origin permissions
+    window.postMessage(message, '*') // TODO: origin permissions
   }
 
 
@@ -89,7 +91,7 @@ export const createIframeProxy = store => {
     const message = createUpMessage(setStateActor(newState))
 
     // Pass the action up to the parent window
-    window.parent.postMessage(message, '*') // TODO: origin permissions
+    window.postMessage(message, '*') // TODO: origin permissions
   }
 
 

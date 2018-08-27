@@ -1,31 +1,42 @@
 import babel from 'rollup-plugin-babel'
-// import commonjs from 'rollup-plugin-commonjs'
-// import resolve from 'rollup-plugin-node-resolve'
+import replace from 'rollup-plugin-replace'
+import uglify from 'rollup-plugin-uglify'
 
-const config = {
-	input: 'src/index.js',
-  name: 'ZeduxSync',
-	output: {
-		file: 'dist/zedux-sync.js',
-		format: 'iife'
-	},
-	plugins: [
-		babel({
-			presets: [
-				[ 'env', { modules: false } ],
-				'es2015-rollup',
-				'stage-2'
-			],
-			runtimeHelpers: true
-		})
+const env = process.env.NODE_ENV
 
-		// resolve({
-		// 	module: true,
-		// 	jsnext: true
-		// }),
-		//
-		// commonjs()
-	]
+const plugins = [
+  babel({
+    exclude: 'node_modules/**',
+    presets: [
+      ['@babel/env', { modules: false }],
+      ['@babel/stage-2', { decoratorsLegacy: true }]
+    ]
+  }),
+
+  replace({
+    'process.env.NODE_ENV': JSON.stringify(env) // quote the value
+  })
+]
+
+if (env === 'production') {
+  plugins.push(
+    uglify({
+      compress: {
+        pure_getters: true,
+        unsafe: true,
+        unsafe_comps: true,
+        warnings: false
+      }
+    })
+  )
 }
 
-export default config
+export default {
+  input: 'src/index.js',
+  output: {
+    file: 'dist/zedux-sync.js',
+    format: 'iife',
+    name: 'ZeduxSync'
+  },
+  plugins
+}

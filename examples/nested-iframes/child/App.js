@@ -24,18 +24,23 @@ class App extends Component {
 
   render() {
     return (
-      <div>
-        the child.
-        <div>
-          <button onClick={this.dispatch}>dispatch action</button>
+      <div style={{ display: 'flex' }}>
+        <div style={{ flex: 1 }}>
+          the child.
+          <div>
+            <button onClick={this.dispatch}>dispatch action</button>
+          </div>
+          Messages:
+          <pre>{JSON.stringify(this.props.proxy.state.messages, null, 2)}</pre>
         </div>
-        Messages:
-        <pre>{JSON.stringify(this.props.proxy.state.messages, null, 2)}</pre>
         <iframe
           ref={this.setIframe}
           src="/nested-iframes/grandchild/index.html"
-          height="700"
-          width="1200"
+          style={{
+            border: 'none',
+            flex: 1,
+            height: '100vh'
+          }}
         />
       </div>
     )
